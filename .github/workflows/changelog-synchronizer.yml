@@ -1,0 +1,36 @@
+name: changelog-synchronizer
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  changelog-synchronizer:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.1
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Syncronize changelog with PR information
+        run: bin/rake changelog:sync
+
+      - name: Commit and push the changes
+        run: |
+          if [ "$(git diff)" != "" ]
+            git config user.name "The ActiveAdmin Bot"
+            git config user.email "bot@activeadmin.io"
+            git add CHANGELOG.md
+            git commit -m "Synchronize changelog"
+            git push origin master
+          fi
